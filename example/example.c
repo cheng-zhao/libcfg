@@ -72,7 +72,7 @@ void help(void *pname) {
 /* A function that prints the license information. */
 void license(void *arg) {
   printf("This code is distributed under the MIT license.\n\
-  See https://github.com/cheng-zhao/libcfg/blob/master/LICENSE.txt\n");
+See https://github.com/cheng-zhao/libcfg/blob/master/LICENSE.txt\n");
   exit(0);
 }
 
