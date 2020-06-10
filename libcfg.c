@@ -1112,7 +1112,7 @@ int cfg_read_opts(cfg_t *cfg, const int argc, char *const *argv,
       }
       else {
         params[j].value = optarg;       /* args are surely null terminated */
-        params[j].vlen = (optarg) ? strlen(optarg) + 1 : 0; /* safe strlen */
+        params[j].vlen = strlen(optarg) + 1;    /* safe strlen */
       }
       /* Assign value to variable. */
       int err = cfg_get(cfg, params + j, CFG_SRC_OF_OPT(prior));
@@ -1193,7 +1193,7 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
 
       /* Retrieve the keyword and value from the line. */
       char msg[CFG_NUM_MAX_SIZE(size_t)];
-      int j, err;
+      int j;
       cfg_parse_return_t status =
         cfg_parse_line(p, endl - p, &key, &value, state);
 
@@ -1209,7 +1209,7 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
             if  (CFG_SRC_VAL(params[j].src) < prior) {
               params[j].value = value;
               params[j].vlen = strlen(value) + 1;
-              err = cfg_get(cfg, params + j, prior);
+              int err = cfg_get(cfg, params + j, prior);
               if (err) {
                 free(chunk);
                 fclose(fp);

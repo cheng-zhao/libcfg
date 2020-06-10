@@ -71,7 +71,7 @@ The format of the attributes are:
 -   `dtype`: a pre-defined data type indicator;
 -   `var`: pointer to the address of the variable/array for holding the retrieved value, and no memory allocation is needed.
 
-In particular, if `opt` is set to `0`, or `lopt` is set to `NULL`, the value will not be retrieved from short or long command line options, respectively. For safety consideration, the length of `lopt` and `name` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](define.h#L65) and [`CFG_MAX_NAME_LEN`](define.h#L65) values respectively.
+In particular, if `opt` is set to `0`, or `lopt` is set to `NULL`, the value will not be retrieved from short or long command line options, respectively. For safety consideration, the length of `lopt` and `name` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](libcfg.h#L65) and [`CFG_MAX_NAME_LEN`](libcfg.h#L65) values respectively.
 
 The supported data types and their indicators are listed below:
 
@@ -123,7 +123,7 @@ typedef struct {
 } cfg_func_t;
 ```
 
-The `opt` and `lopt` variables are the short and long command line option for calling this function, respectively. And at least one of them has to be set, i.e., a case-sensitive letter for `opt`, or a string composed of graphical characters for `lopt`. Again, the length of `lopt` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](define.h#L65) limit. The pointers `func` and `args` are the address of the function to be called, and the corresponding arguments, respectively.
+The `opt` and `lopt` variables are the short and long command line option for calling this function, respectively. And at least one of them has to be set, i.e., a case-sensitive letter for `opt`, or a string composed of graphical characters for `lopt`. Again, the length of `lopt` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](libcfg.h#L65) limit. The pointers `func` and `args` are the address of the function to be called, and the corresponding arguments, respectively.
 
 The functions can then be registered using
 
@@ -171,10 +171,10 @@ The supported formats of command line options are listed below:
 | Description        | Format                                      | Example  | Note                                                                                                                                      |
 |--------------------|---------------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------|
 | Short option       | `-OPT VALUE`<br />or<br />`-OPT=VALUE`      | `-n=10`  | `OPT` must be a letter;<br />`VALUE` is optional.                                                                                         |
-| Long option        | `--LOPT VALUE` <br/>or<br/> `--LOPT=VALUE`  | `--help` | `LOPT` is a string with graphical characters,<br />with length smaller than [`CFG_MAX_LOPT_LEN`](define.h#L65);<br />`VALUE` is optional. |
-| Option terminator | `--`                                        |          | It terminates option scanning.                                                                                                             |
+| Long option        | `--LOPT VALUE` <br/>or<br/> `--LOPT=VALUE`  | `--help` | `LOPT` is a string with graphical characters,<br />with length smaller than [`CFG_MAX_LOPT_LEN`](libcfg.h#L65);<br />`VALUE` is optional. |
+| Option terminator  | `--`                                        |          | It terminates option scanning.                                                                                                            |
 
-Note that the `-` and `=` symbols in the formats are customisable. They are actually defined as [`CFG_CMD_FLAG`](define.h#L79) and [`CFG_CMD_ASSIGN`](define.h#L80) in `define.h`, respectively.
+Note that the `-` and `=` symbols in the formats are customisable. They are actually defined as [`CFG_CMD_FLAG`](libcfg.h#L79) and [`CFG_CMD_ASSIGN`](libcfg.h#L80) in `libcfg.h`, respectively.
 
 All command line arguments satisfying the above formats are interpreted as options, otherwise they are treated as values. And values can only be omitted for boolean type variables &mdash; which implies `true` &mdash; or function calls. If the value contains space or special characters that are reserved by the environment, then it should be enclosed by pairs of single or double quotation marks. Besides, values that may be confused with options (such as `-x`) are recommended to be passed with the assignment symbol `=`.
 
@@ -202,7 +202,7 @@ name_array = [ element1, element2 ]  # entry for an array
 
 Here, `name_variable`, `name_array`, and `name_long_array` indicate the registered name of configuration parameters (see [Parameter registration](#parameter-registration)), and `value`, `element1`, and `element2` are the values to be loaded into memory.
 
-In particular, scalar type definitions can be parsed as arrays with a single element. And by default array type definitions with multiple elements have to be enclosed by a pair of brackets `[]`. In addition, multiple-line definitions are only allowed for arrays, and the line break symbol `\` can only be placed after the array element separator `,`. These symbols, including `[`, `]`, `\`, `,`, as well as the comment indicator `#`, are customisable in [define.h](define.h#L70). And if a value or an element of an array contains special characters, the full value or element has to be enclosed by a pair of single or double quotation marks.
+In particular, scalar type definitions can be parsed as arrays with a single element. And by default array type definitions with multiple elements have to be enclosed by a pair of brackets `[]`. In addition, multiple-line definitions are only allowed for arrays, and the line break symbol `\` can only be placed after the array element separator `,`. These symbols, including `[`, `]`, `\`, `,`, as well as the comment indicator `#`, are customisable in [libcfg.h](libcfg.h#L70). And if a value or an element of an array contains special characters, the full value or element has to be enclosed by a pair of single or double quotation marks.
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
 
@@ -280,4 +280,3 @@ An examples for the usage of this library is provided in the [example](example) 
 It registers variables and arrays for all the supported data types, as well as two functions to be called via command line. Command line options and the configuration file [`input.conf`](example/input.conf) are then parsed. The variables and arrays are printed if they are set correctly.
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
-
