@@ -275,7 +275,7 @@ This function is similar to `cfg_perror`. Note that there can be multiple warnin
 
 ### Examples
 
-An examples for the usage of this library is provided in the [example](example) folder.
+An example for the usage of this library is provided in the [example](example) folder.
 
 It registers variables and arrays for all the supported data types, as well as two functions to be called via command line. Command line options and the configuration file [`input.conf`](example/input.conf) are then parsed. The variables and arrays are printed if they are set correctly.
 

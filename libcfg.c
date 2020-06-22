@@ -34,9 +34,9 @@
 #include <string.h>
 #include "libcfg.h"
 
-/*******************************************************************************
-  Definitions of macros.
-*******************************************************************************/
+/*============================================================================*\
+                             Definitions of macros
+\*============================================================================*/
 
 /* Settings on string allocation. */
 #define CFG_STR_INIT_SIZE       1024      /* initial size of dynamic string */
@@ -73,9 +73,9 @@
   )
 
 
-/*******************************************************************************
-  Internal data structures.
-*******************************************************************************/
+/*============================================================================*\
+                            Internal data structures
+\*============================================================================*/
 
 /* Data structure for storing verified configuration parameters. */
 typedef struct {
@@ -131,9 +131,9 @@ typedef enum {
 } cfg_parse_return_t;
 
 
-/*******************************************************************************
-  Functions for string manipulation.
-*******************************************************************************/
+/*============================================================================*\
+                       Functions for string manipulation
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_strnlen`:
@@ -203,9 +203,9 @@ static void cfg_msg(cfg_t *cfg, const char *msg, const char *key) {
 }
 
 
-/*******************************************************************************
-  Functions for initialising parameters and functions.
-*******************************************************************************/
+/*============================================================================*\
+              Functions for initialising parameters and functions
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_init`:
@@ -491,9 +491,9 @@ int cfg_set_funcs(cfg_t *cfg, const cfg_func_t *func, const int nfunc) {
 }
 
 
-/*******************************************************************************
-  Functions for parsing configurations represented by strings.
-*******************************************************************************/
+/*============================================================================*\
+          Functions for parsing configurations represented by strings
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_parse_line`:
@@ -978,10 +978,10 @@ static int cfg_get(cfg_t *cfg, cfg_param_valid_t *par, int src) {
 }
 
 
-/*******************************************************************************
-  High-level functions for reading configurations from command line options
-  and text files.
-*******************************************************************************/
+/*============================================================================*\
+                High-level functions for reading configurations
+                    from command line options and text files
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_read_opts`:
@@ -1133,7 +1133,7 @@ Function `cfg_read_file`:
 Arguments:
   * `cfg`:      entry for the configurations;
   * `fname`:    name of the input file;
-  * `prior`:    priority of values read from this file;
+  * `prior`:    priority of values read from this file.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
@@ -1296,9 +1296,9 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
 }
 
 
-/*******************************************************************************
-  Functions for checking the status of variables.
-*******************************************************************************/
+/*============================================================================*\
+                 Functions for checking the status of variables
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_is_set`:
@@ -1343,9 +1343,9 @@ int cfg_get_size(const cfg_t *cfg, const void *var) {
 }
 
 
-/******************************************************************************
-  Functions for clean-up and error message handling.
-******************************************************************************/
+/*============================================================================*\
+               Functions for clean-up and error message handling
+\*============================================================================*/
 
 /******************************************************************************
 Function `cfg_destroy`:
@@ -1392,14 +1392,18 @@ Arguments:
   * `msg`:      string to be printed before the error message.
 ******************************************************************************/
 void cfg_pwarn(cfg_t *cfg, FILE *fp, const char *msg) {
-  if (!cfg) return;
-  cfg_error_t *err = (cfg_error_t *) cfg->error;
-  const int num = (CFG_IS_ERROR(cfg)) ? err->num - 1 : err->num;
-  if (num <= 0 || !err->msg) return;
-
   const char *sep;
   if (!msg || *msg == '\0') msg = sep = "";
   else sep = " ";
+
+  if (!cfg) {
+    fprintf(fp, "%s%sthe interface for configurations is not initialised.\n",
+        msg, sep);
+    return;
+  }
+  cfg_error_t *err = (cfg_error_t *) cfg->error;
+  const int num = (CFG_IS_ERROR(cfg)) ? err->num - 1 : err->num;
+  if (num <= 0 || !err->msg) return;
 
   char *errmsg = err->msg;
   for (int i = 0; i < num; i++) {

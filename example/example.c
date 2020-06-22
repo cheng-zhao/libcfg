@@ -40,6 +40,7 @@
 #define PRINT_WARNING   cfg_pwarn(cfg, stderr, "\x1B[35;1mWarning:\x1B[0m");
 #define PRINT_ERROR     {                                               \
   cfg_perror(cfg, stderr, "\x1B[31;1mError:\x1B[0m");                   \
+  cfg_destroy(cfg);                                                     \
   return 1;                                                             \
 }
 
