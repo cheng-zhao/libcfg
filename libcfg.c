@@ -748,7 +748,7 @@ static int cfg_get_value(void *var, char *str, const size_t size,
   /* Validate the value if it is not from command line options. */
   if (!CFG_SRC_FROM_OPT(src)) {
     while (*value && isspace(*value)) value++;          /* omit whitespaces */
-    if (!(*value)) return CFG_ERR_VALUE;                /* empty string */
+    if (*value == '\0') return CFG_ERR_VALUE;           /* empty string */
     if (*value == '"' || *value == '\'') {              /* remove quotes */
       char quote = *value;
       value++;
@@ -759,8 +759,8 @@ static int cfg_get_value(void *var, char *str, const size_t size,
           break;
         }
       }
-      /* empty string with quotes is valid for a string type variable */
-      if (*value == '\0' && dtype != CFG_DTYPE_STR && dtype != CFG_ARRAY_STR)
+      /* empty string with quotes is valid for char or string type variable */
+      if (*value == '\0' && dtype != CFG_DTYPE_CHAR && dtype != CFG_DTYPE_STR)
         return CFG_ERR_VALUE;
       if (quote) return CFG_ERR_VALUE;          /* open quotation marks */
       for (++n; value[n]; n++) if (!isspace(value[n])) return CFG_ERR_VALUE;
