@@ -177,8 +177,16 @@ static void cfg_msg(cfg_t *cfg, const char *msg, const char *key) {
   /* Double the allocated size if the space is not enough. */
   len += err->len;
   if (len > err->max) {
-    size_t max = (err->max >= CFG_STR_MAX_DOUBLE_SIZE) ?
-      err->max + CFG_STR_MAX_DOUBLE_SIZE : err->max << 1;
+    size_t max = 0;
+    if (err->max >= CFG_STR_MAX_DOUBLE_SIZE) {
+      if (SIZE_MAX - CFG_STR_MAX_DOUBLE_SIZE >= err->max)
+        max = CFG_STR_MAX_DOUBLE_SIZE + err->max;
+    }
+    else if (SIZE_MAX / 2 >= err->max) max = err->max << 1;
+    if (!max) {
+      err->errno = CFG_ERR_MEMORY;
+      return;
+    }
     if (len > max) max = len;           /* the size is still not enough */
 
     tmp = realloc(err->msg, max);
@@ -1246,9 +1254,13 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
 
     /* The chunk cannot hold a full line. */
     if (p == chunk) {
-      size_t new_len = (clen >= CFG_STR_MAX_DOUBLE_SIZE) ?
-        clen + CFG_STR_MAX_DOUBLE_SIZE : clen << 1;
-      if (new_len <= clen) {            /* overflow occurred */
+      size_t new_len = 0;
+      if (clen >= CFG_STR_MAX_DOUBLE_SIZE) {
+        if (SIZE_MAX - CFG_STR_MAX_DOUBLE_SIZE >= clen)
+          new_len = clen + CFG_STR_MAX_DOUBLE_SIZE;
+      }
+      else if (SIZE_MAX / 2 >= clen) new_len = clen << 1;
+      if (!new_len) {                   /* overflow occurred */
         cfg_msg(cfg, "failed to allocate memory for reading the file", fname);
         return CFG_ERRNO(cfg) = CFG_ERR_MEMORY;
       }
