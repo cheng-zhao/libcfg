@@ -1272,6 +1272,7 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
       }
       chunk = tmp;
       clen = new_len;
+      nrest += cnt;
       continue;
     }
 
