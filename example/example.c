@@ -215,6 +215,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Release memory. */
+  if (cfg_is_set(cfg, &fconf)) free(fconf);
   cfg_destroy(cfg);
   return 0;
 }
