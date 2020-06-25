@@ -952,7 +952,7 @@ static int cfg_get(cfg_t *cfg, cfg_param_valid_t *par, int src) {
 
   /* Deal with arrays and scalars separately. */
   if (CFG_DTYPE_IS_ARRAY(par->dtype))   /* force preprocessing the value */
-    err = cfg_get_array(par, CFG_SRC_VAL(src));
+    err = cfg_get_array(par, src);
   else {
     /* Allocate memory only for string. */
     if (par->dtype == CFG_DTYPE_STR) {
