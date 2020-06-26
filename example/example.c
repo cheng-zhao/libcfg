@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     {   'i',    "int",          "INT",          CFG_DTYPE_INT,  &vint   },
     {   'l',    "long",         "LONG",         CFG_DTYPE_LONG, &vlong  },
     {   'f',    "float",        "FLOAT",        CFG_DTYPE_FLT,  &vflt   },
-    {   'd',    "double",       "DOUBLE",       CFG_DTYPE_DBL,  &vflt   },
+    {   'd',    "double",       "DOUBLE",       CFG_DTYPE_DBL,  &vdbl   },
     {   's',    "string",       "STRING",       CFG_DTYPE_STR,  &vstr   },
     {   'B',    "bools",        "BOOL_ARR",     CFG_ARRAY_BOOL, &abool  },
     {   'A',    "chars",        "CHAR_ARR",     CFG_ARRAY_CHAR, &achar  },
