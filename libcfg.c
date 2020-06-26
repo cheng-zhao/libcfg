@@ -179,7 +179,8 @@ static void cfg_msg(cfg_t *cfg, const char *msg, const char *key) {
   len += err->len;
   if (len > err->max) {
     size_t max = 0;
-    if (err->max >= CFG_STR_MAX_DOUBLE_SIZE) {
+    if (err->max == 0) max = len;
+    else if (err->max >= CFG_STR_MAX_DOUBLE_SIZE) {
       if (SIZE_MAX - CFG_STR_MAX_DOUBLE_SIZE >= err->max)
         max = CFG_STR_MAX_DOUBLE_SIZE + err->max;
     }
