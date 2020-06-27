@@ -665,6 +665,8 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
   int n = 0;
   char quote = '\0';
   cfg_parse_state_t state = CFG_PARSE_START;
+  char *start, *end;
+  start = end = NULL;
 
   for (int i = 0; i < par->vlen; i++) {
     if (state == CFG_PARSE_ARRAY_DONE) break;
@@ -674,7 +676,7 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
       case CFG_PARSE_START:
         if (c == CFG_SYM_ARRAY_START) {
           state = CFG_PARSE_ARRAY_START;
-          par->value[i] = ' ';          /* remove '[' for value parser */
+          start = par->value + i;       /* mark the array starting point */
         }
         else if (!isspace(c)) {                 /* not an array */
           par->narr = 1;        /* try to parse as a single variable later */
@@ -700,7 +702,7 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
         }
         else if (c == CFG_SYM_ARRAY_END) {      /* end of array */
           state = CFG_PARSE_ARRAY_END;
-          par->value[i] = ' ';          /* remove ']' for value parser */
+          end = par->value + i;         /* mark the array ending point */
         }
         else if (c == CFG_SYM_COMMENT || !isprint(c)) return CFG_ERR_VALUE;
         break;
@@ -718,7 +720,7 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
         }
         else if (c == CFG_SYM_ARRAY_END) {      /* end of array */
           state = CFG_PARSE_ARRAY_END;
-          par->value[i] = ' ';          /* remove ']' for value parser */
+          end = par->value + i;         /* mark the array ending point */
         }
         else if (!isspace(c)) return CFG_ERR_VALUE;
         break;
@@ -733,6 +735,8 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
         return CFG_ERR_VALUE;
     }
   }
+  par->value = start + 1;       /* omit the starting '[' */
+  *end = '\0';                  /* remove the ending ']' */
   par->narr = n + 1;
   return 0;
 }
@@ -842,12 +846,12 @@ Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 static int cfg_get_array(cfg_param_valid_t *par, int src) {
-  char *value = par->value;   /* array elements are separated by '\0' */
   size_t len;
   int i, err;
 
   /* Split the value string for array elements. */
   if ((err = cfg_parse_array(par))) return err;
+  char *value = par->value;   /* array elements are separated by '\0' */
 
   /* Allocate memory and assign values for arrays. */
   switch (par->dtype) {
