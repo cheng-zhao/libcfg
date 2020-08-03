@@ -47,7 +47,7 @@
 /* Settings on the source of the configurations. */
 #define CFG_SRC_NULL            0
 #define CFG_SRC_OF_OPT(x)       (-x)    /* -x for source being command line */
-#define CFG_SRC_VAL(x)          ((x < 0) ? -(unsigned)(x) : x)    /* abs(x) */
+#define CFG_SRC_VAL(x)          ((x < 0) ? -(x) : x)              /* abs(x) */
 #define CFG_SRC_FROM_OPT(x)     (x < 0)  /* check if source is command line */
 
 /* Definitions of error codes. */
@@ -668,7 +668,7 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
   char *start, *end;
   start = end = NULL;
 
-  for (int i = 0; i < par->vlen; i++) {
+  for (size_t i = 0; i < par->vlen; i++) {
     if (state == CFG_PARSE_ARRAY_DONE) break;
     char c = par->value[i];             /* this is surely not '\0' */
 
