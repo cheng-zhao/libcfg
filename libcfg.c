@@ -7,17 +7,17 @@
         https://github.com/cheng-zhao/libcfg
 
 * Copyright (c) 2019 Cheng Zhao <zhaocheng03@gmail.com>
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <string.h>
+#include <strings.h>
 #include "libcfg.h"
 
 /*============================================================================*\
@@ -86,10 +87,12 @@ typedef struct {
   size_t nlen;                  /* length of the parameter name             */
   size_t llen;                  /* length of the long option                */
   size_t vlen;                  /* length of the value                      */
+  size_t hlen;                  /* length of the help message               */
   char *name;                   /* name of the parameter                    */
   char *lopt;                   /* long command line option                 */
   char *value;                  /* value of the parameter                   */
   void *var;                    /* variable for saving the retrieved value  */
+  char *help;                   /* parameter help message                   */
 } cfg_param_valid_t;
 
 /* Data structure for storing verified command line functions. */
@@ -97,9 +100,11 @@ typedef struct {
   int called;                   /* 1 if the function is already called      */
   int opt;                      /* short command line option                */
   size_t llen;                  /* length of the long option                */
+  size_t hlen;                  /* length of the help message               */
   char *lopt;                   /* long command line option                 */
   void (*func) (void *);        /* pointer to the function                  */
   void *args;                   /* pointer to the arguments                 */
+  char *help;                   /* parameter help message                   */
 } cfg_func_valid_t;
 
 /* Data structure for storing warning/error messages. */
@@ -110,6 +115,15 @@ typedef struct {
   size_t len;                   /* length of the existing messages          */
   size_t max;                   /* allocated space for the messages         */
 } cfg_error_t;
+
+/* Data structure for storing an help line content. */
+typedef struct {
+  cfg_dtype_t dtype;            /* data type of the parameter               */
+  int opt;                      /* short command line option                */
+  char *lopt;                   /* long command line option                 */
+  char *name;                   /* name of the parameter                    */
+  char *help;                   /* parameter help message                   */
+} cfg_help_line_t;
 
 /* String parser states. */
 typedef enum {
@@ -239,6 +253,112 @@ cfg_t *cfg_init(void) {
 }
 
 /******************************************************************************
+Function `cfg_print_help_line`:
+  Print short and long options with their dashes
+Arguments:
+  * `buffer`:  output buffer with options sets
+  * `help_line`:  content to use for display
+Return:
+  Output string length.
+******************************************************************************/
+static unsigned int cfg_print_help_line(char *buffer, const cfg_help_line_t *help_line) {
+    unsigned int len = 0;
+    if (help_line->opt) {
+        len += sprintf(buffer, " -%c", help_line->opt);
+        if (help_line->lopt) {
+            len += sprintf(buffer + len, ",");
+        }
+    }
+    if (help_line->lopt) {
+        len += sprintf(buffer + len, " --%s", help_line->lopt);
+    }
+    if (help_line->dtype != CFG_DTYPE_NULL && help_line->dtype != CFG_DTYPE_BOOL) {
+      len += sprintf(buffer + len, " %s", help_line->name);
+    }
+    if (help_line->help) {
+        len += sprintf(buffer + len, "\n    %s", help_line->help);
+    }
+    return len;
+}
+
+/******************************************************************************
+Function `cfg_print_param`:
+  Wrapper to `cfg_print_help_line` for `cfg_param_valid_t` parameter
+Arguments:
+  * `buffer`:  output buffer with options sets
+  * `param`:  parameter to display
+Return:
+  Output string length.
+******************************************************************************/
+static unsigned int cfg_print_param(char *buffer, const cfg_param_valid_t *param) {
+  cfg_help_line_t *help_content = malloc(sizeof(cfg_help_line_t));
+  help_content->dtype = param->dtype;
+  help_content->opt = param->opt;
+  help_content->lopt = param->lopt;
+  help_content->name = param->name;
+  help_content->help = param->help;
+  return cfg_print_help_line(buffer, help_content);
+}
+
+/******************************************************************************
+Function `cfg_print_func`:
+  Wrapper to `cfg_print_help_line` for `cfg_func_valid_t` parameter
+Arguments:
+  * `buffer`:  output buffer with options sets
+  * `func`:  function to display
+Return:
+  Output string length.
+******************************************************************************/
+static unsigned int cfg_print_func(char *buffer, const cfg_func_valid_t *func) {
+  cfg_help_line_t *help_content = malloc(sizeof(cfg_help_line_t));
+  help_content->dtype = CFG_DTYPE_NULL;
+  help_content->opt = func->opt;
+  help_content->lopt = func->lopt;
+  help_content->name = NULL;
+  help_content->help = func->help;
+  return cfg_print_help_line(buffer, help_content);
+}
+
+/******************************************************************************
+Function `cfg_print_help`:
+  Print help messages based on validated parameters
+Arguments:
+  * `cfg`:      entry for all configuration parameters;
+******************************************************************************/
+void cfg_print_help(cfg_t *cfg) {
+    unsigned int dash_size_overload = 13;
+    char buffer[CFG_MAX_LOPT_LEN + CFG_MAX_NAME_LEN + dash_size_overload];
+    bzero(buffer, CFG_MAX_LOPT_LEN + CFG_MAX_NAME_LEN + dash_size_overload);
+    if (cfg && !CFG_IS_ERROR(cfg)) {
+        if (cfg->npar > 0) {
+            const cfg_param_valid_t *param = (cfg_param_valid_t *)cfg->params;
+            printf("Option%c:\n", cfg->npar > 1 ? 's' : '\0');
+            for (size_t i = 0; i < cfg->npar; ++i) {
+                cfg_print_param(buffer, &param[i]);
+                printf("%s\n", buffer);
+                bzero(buffer, CFG_MAX_LOPT_LEN + CFG_MAX_NAME_LEN + dash_size_overload);
+            }
+            printf("\n");
+        }
+        else {
+            cfg_msg(cfg, "the parameter list is not set", NULL);
+        }
+        if (cfg->nfunc > 0) {
+            const cfg_func_valid_t *param = (cfg_func_valid_t *)cfg->funcs;
+            printf("Function%c:\n", cfg->nfunc > 1 ? 's' : '\0');
+            for (size_t i = 0; i < cfg->nfunc; ++i) {
+                cfg_print_func(buffer, &param[i]);
+                printf("%s\n", buffer);
+                bzero(buffer, CFG_MAX_LOPT_LEN + CFG_MAX_NAME_LEN + dash_size_overload);
+            }
+        }
+        else {
+            cfg_msg(cfg, "the function list is not set", NULL);
+        }
+    }
+}
+
+/******************************************************************************
 Function `cfg_set_params`:
   Verify and register configuration parameters.
 Arguments:
@@ -273,7 +393,7 @@ int cfg_set_params(cfg_t *cfg, const cfg_param_t *param, const int npar) {
     cfg_param_valid_t *par = (cfg_param_valid_t *) cfg->params + cfg->npar + i;
     par->dtype = CFG_DTYPE_NULL;
     par->src = CFG_SRC_NULL;
-    par->name = par->lopt = par->value = NULL;
+    par->help = par->name = par->lopt = par->value = NULL;
     par->var = NULL;
 
     /* Create the string for the current index and short option. */
@@ -282,13 +402,13 @@ int cfg_set_params(cfg_t *cfg, const cfg_param_t *param, const int npar) {
 
     /* Verify the name. */
     char *str = param[i].name;
-    if (!str || (!isalpha(*str) && *str != '_')) {
+    if (!str || (!isalpha(*str) && *str != '_' && *str != '-')) {
       cfg_msg(cfg, "invalid parameter name in the list with index", tmp);
       return CFG_ERRNO(cfg) = CFG_ERR_INPUT;
     }
     int j = 1;
     while (str[j] != '\0') {
-      if (!isalnum(str[j]) && str[j] != '_') {
+      if (!isalnum(str[j]) && str[j] != '_' && str[j] != '-') {
         cfg_msg(cfg, "invalid parameter name in the list with index", tmp);
         return CFG_ERRNO(cfg) = CFG_ERR_INPUT;
       }
@@ -299,6 +419,18 @@ int cfg_set_params(cfg_t *cfg, const cfg_param_t *param, const int npar) {
     }
     par->name = str;
     par->nlen = j + 1;       /* length of name with the ending '\0' */
+
+    /* Verify the help message. */
+    str = param[i].help;
+    j = 0;
+    while (str[j] != '\0') {
+      if (++j >= CFG_MAX_HELP_LEN) {            /* no null termination */
+        cfg_msg(cfg, "invalid help for parameter", par->name);
+        return CFG_ERRNO(cfg) = CFG_ERR_INPUT;
+      }
+    }
+    par->help = str;
+    par->hlen = j + 1;       /* length of help with the ending '\0' */
 
     /* Verify the data type. */
     if (CFG_DTYPE_INVALID(param[i].dtype)) {
@@ -414,6 +546,7 @@ int cfg_set_funcs(cfg_t *cfg, const cfg_func_t *func, const int nfunc) {
     fun->lopt = NULL;
     fun->func = NULL;
     fun->args = NULL;
+    fun->help = NULL;
 
     /* Create the string for the current index and short option. */
     char tmp[CFG_NUM_MAX_SIZE(int)];
@@ -457,6 +590,20 @@ int cfg_set_funcs(cfg_t *cfg, const cfg_func_t *func, const int nfunc) {
       return CFG_ERRNO(cfg) = CFG_ERR_INPUT;
     }
     fun->args = func[i].args;
+
+    /* Verify the help message. */
+    if (func[i].help) {
+        str = func[i].help;
+        j = 0;
+        while (str[j] != '\0') {
+            if (++j >= CFG_MAX_HELP_LEN) {            /* no null termination */
+                cfg_msg(cfg, "invalid help for function", tmp);
+                return CFG_ERRNO(cfg) = CFG_ERR_INPUT;
+            }
+        }
+        fun->help = str;
+        fun->hlen = j + 1;       /* length of help with the ending '\0' */
+    }
 
     /* Check duplicates with the registered functions. */
     for (j = 0; j < cfg->nfunc + i; j++) {
@@ -520,12 +667,12 @@ static cfg_parse_return_t cfg_parse_line(char *line, const size_t len,
     char **key, char **value, cfg_parse_state_t state) {
   if (!line || *line == '\0' || len == 0) return CFG_PARSE_PASS;
   char quote = '\0';            /* handle quotation marks */
-  char *newline;                /* handle line continuation */
+  char *newline = NULL;                /* handle line continuation */
   for (size_t i = 0; i < len; i++) {
     char c = line[i];
     switch (state) {
       case CFG_PARSE_START:
-        if (isalpha(c) || c == '_') {
+        if (isalpha(c) || c == '_' || c == '-') {
           *key = line + i;
           state = CFG_PARSE_KEYWORD;
         }
@@ -540,7 +687,7 @@ static cfg_parse_return_t cfg_parse_line(char *line, const size_t len,
           state = (c == CFG_SYM_EQUAL) ?
             CFG_PARSE_VALUE_START : CFG_PARSE_EQUAL;
         }
-        else if (!isalnum(c) && c != '_') return CFG_PARSE_ERROR;
+        else if (!isalnum(c) && c != '_' && c != '-') return CFG_PARSE_ERROR;
         break;
       case CFG_PARSE_EQUAL:
         if (c == CFG_SYM_EQUAL) state = CFG_PARSE_VALUE_START;
@@ -642,6 +789,9 @@ static cfg_parse_return_t cfg_parse_line(char *line, const size_t len,
       return CFG_PARSE_PASS;
     case CFG_PARSE_ARRAY_NEWLINE:
       *newline = ' ';
+#if __STDC_VERSION__ > 201112L
+      [[fallthrough]];
+#endif
     case CFG_PARSE_CLEAN:
       return CFG_PARSE_CONTINUE;
     default:
@@ -734,8 +884,10 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
         return CFG_ERR_VALUE;
     }
   }
-  par->value = start + 1;       /* omit the starting '[' */
-  *end = '\0';                  /* remove the ending ']' */
+  if (start)
+      par->value = start + 1;       /* omit the starting '[' */
+  if (end)
+      *end = '\0';                  /* remove the ending ']' */
   par->narr = n + 1;
   return 0;
 }
@@ -753,7 +905,8 @@ Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 static int cfg_get_value(void *var, char *str, const size_t size,
-    const cfg_dtype_t dtype, int src) {
+                         const cfg_dtype_t dtype, int src) {
+  (void) src;
   if (!str || !size) return 0;
   char *value = str;
   int n;
@@ -1242,6 +1395,9 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
         case CFG_PARSE_ERROR:
           sprintf(msg, "%zu", nline);
           cfg_msg(cfg, "invalid configuration entry at line", msg);
+#if __STDC_VERSION__ > 201112L
+          [[fallthrough]];
+#endif
         case CFG_PARSE_PASS:
           state = CFG_PARSE_START;
           break;
@@ -1280,7 +1436,7 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
 
     /* Copy the remaining characters to the beginning of the chunk. */
     if (state == CFG_PARSE_ARRAY_START) {       /* copy also parsed part */
-      if (!key) {       
+      if (!key) {
         free(chunk);
         fclose(fp);
         cfg_msg(cfg, "unknown parser interruption", NULL);
@@ -1458,4 +1614,3 @@ void cfg_pwarn(cfg_t *cfg, FILE *fp, const char *msg) {
   err->len -= errmsg - err->msg;
   memmove(err->msg, errmsg, err->len);
 }
-

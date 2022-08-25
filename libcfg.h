@@ -7,17 +7,17 @@
         https://github.com/cheng-zhao/libcfg
 
 * Copyright (c) 2019 Cheng Zhao <zhaocheng03@gmail.com>
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -64,6 +64,7 @@ typedef enum {
 \*============================================================================*/
 #define CFG_MAX_NAME_LEN        128
 #define CFG_MAX_LOPT_LEN        128
+#define CFG_MAX_HELP_LEN        1024
 #define CFG_MAX_FILENAME_LEN    1024
 
 /*============================================================================*\
@@ -100,6 +101,7 @@ typedef struct {
   char *name;                   /* name of the parameter                */
   cfg_dtype_t dtype;            /* data type of the parameter           */
   void *var;                    /* variable for the retrieved value     */
+  char *help;                   /* help message                         */
 } cfg_param_t;
 
 /* Interface for registering command line functions. */
@@ -108,6 +110,7 @@ typedef struct {
   char *lopt;                   /* long command line option             */
   void (*func) (void *);        /* pointer to the function              */
   void *args;                   /* pointer to the arguments             */
+  char *help;                   /* help message                         */
 } cfg_func_t;
 
 
@@ -223,5 +226,22 @@ Arguments:
   * `msg`:      string to be printed before the error message.
 ******************************************************************************/
 void cfg_pwarn(cfg_t *cfg, FILE *fp, const char *msg);
+
+/******************************************************************************
+Function `cfg_print_help`:
+  Print help messages based on validated parameters
+Arguments:
+  * `cfg`:      entry for all configuration parameters;
+******************************************************************************/
+void cfg_print_help(cfg_t *cfg);
+
+/******************************************************************************
+Function `cfg_print_usage`:
+  Print usage messages based on validated parameters and provided progname
+Arguments:
+  * `cfg`:      entry for all configuration parameters;
+  * `progname`: program name to be displayed
+******************************************************************************/
+void cfg_print_usage(cfg_t *cfg, char *progname);
 
 #endif
