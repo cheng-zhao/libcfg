@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c99 -O2 -Wall
+CFLAGS = -std=c99 -O0 -ggdb -Wall -Werror
 EXEC = libcfg_example
 
 all:

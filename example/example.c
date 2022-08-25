@@ -45,33 +45,14 @@
 }
 
 /* A function that prints help messages. */
-void help(void *pname) {
-  printf("Usage: %s [OPTION [VALUE]]\n\
-  -c, --conf\n\
-        Set the configuration file.\n\
-  -b, --bool / -B, --bools\n\
-        Set the boolean type BOOL / BOOL_ARR.\n\
-  -a, --char / -A, --chars\n\
-        Set the char type CHAR / CHAR_ARR.\n\
-  -i, --int / -I, --ints\n\
-        Set the int type INT / INT_ARR.\n\
-  -l, --long / -L, --longs\n\
-        Set the long type LONG / LONG_ARR.\n\
-  -f, --float / -F, --floats\n\
-        Set the float type FLOAT / FLOAT_ARR.\n\
-  -d, --double / -D, --doubles\n\
-        Set the double type DOUBLE / DOUBLE_ARR.\n\
-  -s, --string / -S, --strings\n\
-        Set the string type STRING / STRING_ARR.\n\
-  -h, --help\n\
-        Display this message and exit.\n\
-  --license\n\
-        Display the license information.\n", (char *) pname);
+void help(void *cfg) {
+  cfg_print_help((cfg_t *)cfg);
   exit(0);
 }
 
 /* A function that prints the license information. */
 void license(void *arg) {
+  (void) arg; // unused
   printf("This code is distributed under the MIT license.\n\
 See https://github.com/cheng-zhao/libcfg/blob/master/LICENSE.txt\n");
   exit(0);
@@ -97,47 +78,78 @@ int main(int argc, char *argv[]) {
   float *aflt;
   double *adbl;
   char **astr;
+  cfg_t *cfg = cfg_init();
 
   /* Configurations for functions to be called via command line flags. */
   const int nfunc = 2;
   const cfg_func_t funcs[2] = {
-    {   'h',    "help",         help,           argv[0] },
-    {   0,      "license",      license,        NULL    }
+    { 'h', "help", help, cfg, "Print this message and exit." },
+    { 0, "license", license, NULL , NULL }
   };
 
   /* Configuration parameters. */
-  const int npar = 15;
-  const cfg_param_t params[15] = {
-    {   'c',    "conf",         "CONF_FILE",    CFG_DTYPE_STR,  &fconf  },
-    {   'b',    "bool",         "BOOL",         CFG_DTYPE_BOOL, &vbool  },
-    {   'a',    "char",         "CHAR",         CFG_DTYPE_CHAR, &vchar  },
-    {   'i',    "int",          "INT",          CFG_DTYPE_INT,  &vint   },
-    {   'l',    "long",         "LONG",         CFG_DTYPE_LONG, &vlong  },
-    {   'f',    "float",        "FLOAT",        CFG_DTYPE_FLT,  &vflt   },
-    {   'd',    "double",       "DOUBLE",       CFG_DTYPE_DBL,  &vdbl   },
-    {   's',    "string",       "STRING",       CFG_DTYPE_STR,  &vstr   },
-    {   'B',    "bools",        "BOOL_ARR",     CFG_ARRAY_BOOL, &abool  },
-    {   'A',    "chars",        "CHAR_ARR",     CFG_ARRAY_CHAR, &achar  },
-    {   'I',    "ints",         "INT_ARR",      CFG_ARRAY_INT,  &aint   },
-    {   'L',    "longs",        "LONG_ARR",     CFG_ARRAY_LONG, &along  },
-    {   'F',    "floats",       "FLOAT_ARR",    CFG_ARRAY_FLT,  &aflt   },
-    {   'D',    "doubles",      "DOUBLE_ARR",   CFG_ARRAY_DBL,  &adbl   },
-    {   'S',    "strings",      "STRING_ARR",   CFG_ARRAY_STR,  &astr   }
+  const cfg_param_t params[] = {
+    { 'c', "conf", "CONF_FILE", CFG_DTYPE_STR, &fconf,
+        "Set the configuration file."
+    },
+    { 'b', "bool", "BOOL", CFG_DTYPE_BOOL, &vbool,
+        "Set the boolean type BOOL."
+    },
+    { 'a', "char", "CHAR", CFG_DTYPE_CHAR, &vchar,
+        "Set the char type CHAR."
+    },
+    { 'i', "int", "INT", CFG_DTYPE_INT, &vint,
+        "Set the int type INT."
+    },
+    { 'l', "long", "LONG", CFG_DTYPE_LONG, &vlong,
+        "Set the long type LONG"
+    },
+    { 'f', "float", "FLOAT", CFG_DTYPE_FLT, &vflt,
+        "Set the float type FLOAT"
+    },
+    { 'd', "double", "DOUBLE", CFG_DTYPE_DBL, &vdbl,
+        "Set the double type DOUBLE"
+    },
+    { 's', "string", "STRING", CFG_DTYPE_STR, &vstr,
+        "Set the string type STRING"
+    },
+    { 'B', "bools", "BOOL_ARR", CFG_ARRAY_BOOL, &abool,
+        "Set the boolean type BOOL_ARR"
+    },
+    { 'A', "chars", "CHAR_ARR", CFG_ARRAY_CHAR, &achar,
+        "Set the char type CHAR_ARR"
+    },
+    { 'I', "ints", "INT_ARR", CFG_ARRAY_INT, &aint,
+        "Set the int type INT_ARR"
+    },
+    { 'L', "longs", "LONG_ARR", CFG_ARRAY_LONG, &along,
+        "Set the long type LONG_ARR"
+    },
+    { 'F', "floats", "FLOAT_ARR", CFG_ARRAY_FLT, &aflt,
+        "Set the float type FLOAT_ARR"
+    },
+    { 'D', "doubles", "DOUBLE_ARR", CFG_ARRAY_DBL, &adbl,
+        "Set the double type DOUBLE_ARR"
+    },
+    { 'S', "strings", "STRING_ARR", CFG_ARRAY_STR, &astr,
+        "Set the string type STRING_ARR"
+    }
   };
+  const int npar = sizeof(params) / sizeof(params[0]);
+  (void) npar;
 
   /* Initialise the configuations. */
-  cfg_t *cfg = cfg_init();
   if (!cfg) {
     fprintf(stderr, "Error: failed to initlise the configurations.\n");
     return 1;
   }
 
-  /* Register functions to be called via command line options. */
-  if (cfg_set_funcs(cfg, funcs, nfunc)) PRINT_ERROR;
-  PRINT_WARNING;
-
   /* Register configuration parameters. */
   if (cfg_set_params(cfg, params, npar)) PRINT_ERROR;
+  PRINT_WARNING;
+
+  /* Register functions to be called via command line options. */
+  if (cfg_set_funcs(cfg, funcs, nfunc)) PRINT_ERROR;
   PRINT_WARNING;
 
   /* Parse command line options. */
