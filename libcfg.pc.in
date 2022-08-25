@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libcfg
+Version: @PACKAGE_VERSION@
+Description: C library for parsing command line option and configuration files
+Url: https://github.com/cheng-zhao/libcfg
+Libs: -L${libdir} -lcfg
+Cflags: -I${includedir}
