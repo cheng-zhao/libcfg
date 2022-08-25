@@ -36,6 +36,36 @@ Since this library is tiny and portable, it is recommended to compile the only t
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
 
+## System library
+
+You also can set this library as shared onto your system. Use the standard autotools suite.
+
+### Build and install the library
+
+```
+autoreconf -fiv
+./configure --prefix=/usr/local
+make
+sudo make install
+```
+
+### Use the shared library
+
+Include the header in top of your code.
+```c
+#include <libcfg.h>
+```
+
+Compile with `pkg-config`:
+```
+gcc $(pkg-config --cflags --libs cfg) -o example example.c
+```
+
+Compile without ~`pkg-config`~:
+```
+gcc -I/usr/local/include -lcfg -o example example.c
+```
+
 ## Getting started
 
 ### Initialisation
@@ -280,8 +310,8 @@ This function is similar to `cfg_perror`. Note that there can be multiple warnin
 
 ### Examples
 
-An example for the usage of this library is provided in the [example](example) folder.
+An example for the usage of this library is provided in the [tests](tests) folder.
 
-It registers variables and arrays for all the supported data types, as well as two functions to be called via command line. Command line options and the configuration file [`input.conf`](example/input.conf) are then parsed. The variables and arrays are printed if they are set correctly.
+It registers variables and arrays for all the supported data types, as well as two functions to be called via command line (`--help` and `--license`). Command line options and the configuration file [`input.conf`](tests/input.conf) are then parsed. The variables and arrays are printed if they are set correctly.
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
