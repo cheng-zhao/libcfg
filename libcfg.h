@@ -234,6 +234,7 @@ Arguments:
   * `cfg`:      entry for all configuration parameters;
 ******************************************************************************/
 void cfg_print_help(cfg_t *cfg);
+void cfg_print_usage(cfg_t *cfg, char *progname);
 
 /******************************************************************************
 Function `cfg_print_usage`:

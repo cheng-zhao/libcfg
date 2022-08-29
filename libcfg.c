@@ -359,6 +359,35 @@ void cfg_print_help(cfg_t *cfg) {
 }
 
 /******************************************************************************
+Function `cfg_print_usage`:
+  Print usage messages based on validated parameters and provided progname
+Arguments:
+  * `cfg`:      entry for all configuration parameters;
+  * `progname`: program name to be displayed
+******************************************************************************/
+void cfg_print_usage(cfg_t *cfg, char *progname) {
+  if (cfg && !CFG_IS_ERROR(cfg)) {
+    char options[] = " [OPTIONS]";
+    char functions[] = " [FUNCTIONS]";
+    const char local_progname[] = "program";
+    if (!progname || *progname == '\0') {
+      progname = (char *)local_progname;
+    }
+    if (cfg->npar == 1) {
+      options[8] = ']'; options[9] = '\0'; }  // Singularize
+    else if (cfg->npar == 0)
+      *options = '\0'; // Remove options
+    if (cfg->nfunc == 1) {
+      functions[10] = ']';
+      functions[11] = '\0';
+    }  // Singularize
+    else if (cfg->nfunc == 0)
+      *functions = '\0'; // Remove functions
+    printf("Usage: %s%s%s\n", progname, options, functions);
+  }
+}
+
+/******************************************************************************
 Function `cfg_set_params`:
   Verify and register configuration parameters.
 Arguments:

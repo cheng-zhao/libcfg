@@ -46,6 +46,7 @@
 
 /* A function that prints help messages. */
 void help(void *cfg) {
+  cfg_print_usage((cfg_t *)cfg, NULL);
   cfg_print_help((cfg_t *)cfg);
   exit(0);
 }
