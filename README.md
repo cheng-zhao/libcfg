@@ -61,6 +61,7 @@ typedef struct {
   char *name;                   /* name of the parameter                */
   cfg_dtype_t dtype;            /* data type of the parameter           */
   void *var;                    /* variable for the retrieved value     */
+  char *help;                   /* help message for the parameter       */
 } cfg_param_t;
 ```
 
@@ -69,7 +70,8 @@ The format of the attributes are:
 -   `lopt`: a string composed of characters with graphical representations (ensured by [isgraph](https://en.cppreference.com/w/c/string/byte/isgraph)), or a `NULL` pointer;
 -   `name`: a string composed of case-sensitive letters, digits, and the underscore character, and starting with either a letter or an underscore;
 -   `dtype`: a pre-defined data type indicator;
--   `var`: pointer to the address of the variable/array for holding the retrieved value, and no memory allocation is needed.
+-   `var`: pointer to the address of the variable/array for holding the retrieved value, and no memory allocation is needed;
+-   `help`: a string defining the help message for the parameter.
 
 In particular, if `opt` is set to `0`, or `lopt` is set to `NULL`, the value will not be retrieved from short or long command line options, respectively. For safety consideration, the length of `lopt` and `name` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](libcfg.h#L66) and [`CFG_MAX_NAME_LEN`](libcfg.h#L65) values respectively.
 
@@ -120,10 +122,11 @@ typedef struct {
   char *lopt;                   /* long command line option             */
   void (*func) (void *);        /* pointer to the function              */
   void *args;                   /* pointer to the arguments             */
+  char *help;                   /* help message for the function        */
 } cfg_func_t;
 ```
 
-The `opt` and `lopt` variables are the short and long command line option for calling this function, respectively. And at least one of them has to be set, i.e., a case-sensitive letter for `opt`, or a string composed of graphical characters for `lopt`. Again, the length of `lopt` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](libcfg.h#L66) limit. The pointers `func` and `args` are the address of the function to be called, and the corresponding arguments, respectively.
+The `opt` and `lopt` variables are the short and long command line option for calling this function, respectively. And at least one of them has to be set, i.e., a case-sensitive letter for `opt`, or a string composed of graphical characters for `lopt`. Again, the length of `lopt` must be smaller than the pre-defined [`CFG_MAX_LOPT_LEN`](libcfg.h#L66) limit. The pointers `func` and `args` are the address of the function to be called, and the corresponding arguments, respectively. `help` is a string defining the help message for the function.
 
 The functions can then be registered using
 
@@ -138,13 +141,15 @@ Note that the `cfg_func_t` type structure for function registration cannot be de
 As an example, a typical demand for calling functions via command line is to print the usage of a program, when there is the `-h` or `--help` flag. In this case, the help function and the corresponding structure can be defined as
 
 ```c
-void help(void *arg) {
-  printf("Display the help messages.\n");
+void help(void *cfg) {
+  cfg_print_help((cfg_t *)cfg);
   exit(0);
 }
 ```
 ```c
-const cfg_func_t help_func = {'h', "help", help, NULL};
+cfg_t *cfg = init_config();
+...
+const cfg_func_t help_func = {'h', "help", help, cfg, "Print this message and exit."};
 ```
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
